@@ -105,7 +105,6 @@ def location(message):
         "Ви можете повернутися до меню кнопками нижче 👇"
     )
     bot.send_message(message.chat.id, text, reply_markup=inline_map, parse_mode='Markdown')
-    bot.send_message(message.chat.id, "Кнопки меню:", reply_markup=main_menu())
 
 def send_profile_info(chat_id, text):
     if chat_id in last_profile_msg:
@@ -175,3 +174,4 @@ def unknown_message(message):
 if __name__ == '__main__':
     print("Бот ТНВК №15 успішно запущений...")
     bot.infinity_polling()
+
