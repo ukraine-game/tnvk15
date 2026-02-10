@@ -82,8 +82,6 @@ def location(message):
         "Ви можете повернутися до меню кнопками нижче 👇"
     )
     bot.send_message(message.chat.id, text, reply_markup=inline_map, parse_mode='Markdown')
-    # Відправляємо Reply-меню окремим повідомленням, щоб воно не зникло
-    bot.send_message(message.chat.id, "Кнопки меню:", reply_markup=main_menu())
 
 def send_profile_info(chat_id, text):
     # Видаляємо попередній опис профілю, щоб не засмічувати чат
@@ -145,3 +143,4 @@ def p4(message):
 if __name__ == '__main__':
     print("Бот ТНВК №15 запущений...")
     bot.infinity_polling()
+
