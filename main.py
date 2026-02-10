@@ -36,6 +36,17 @@ def start(message):
         parse_mode='Markdown'
     )
 
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    help_text = (
+        "*Допомога*\n\n"
+        "Цей бот допоможе вам ознайомитися з профілями навчання в нашому закладі.\n\n"
+        "— Використовуйте кнопки під полем вводу для навігації.\n"
+        "— Якщо кнопки зникли, введіть /start.\n\n"
+        "Якщо у вас виникли додаткові питання або бот працює некоректно, зверніться до адміністрації закладу."
+    )
+    bot.send_message(message.chat.id, help_text, reply_markup=main_menu(), parse_mode='Markdown')
+
 @bot.message_handler(func=lambda m: m.text == "🎓 ПРОФІЛІ НАВЧАННЯ")
 def show_profiles(message):
     bot.send_message(
@@ -67,16 +78,15 @@ def contacts(message):
 
 @bot.message_handler(func=lambda m: m.text == "📍 ЛОКАЦІЯ")
 def location(message):
-    # Координати школи
     lat, lon = 49.544480, 25.628073
-    # Спеціальне посилання для побудови маршруту від поточної геопозиції користувача до школи
+    # Спеціальне посилання для Google Maps для побудови маршруту від поточної позиції до цілі
     route_url = f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
     
     inline_map = types.InlineKeyboardMarkup()
     inline_map.add(types.InlineKeyboardButton("🗺 Побудувати маршрут (Google Maps)", url=route_url))
     
     text = (
-        "*ТНВК Школа-ліцей №15 імені Лесі Українки*\n\n"
+        "*ТНВК Школа-ліцей №15*\n\n"
         "📍 **Адреса:** м. Тернопіль, вул. Лесі Українки, 23\n\n"
         "ℹ️ _Щоб побудувати маршрут на мапах від вашого поточного місцезнаходження, натисніть на кнопку нижче._\n\n"
         "Ви можете повернутися до меню кнопками нижче 👇"
@@ -84,7 +94,6 @@ def location(message):
     bot.send_message(message.chat.id, text, reply_markup=inline_map, parse_mode='Markdown')
 
 def send_profile_info(chat_id, text):
-    # Видаляємо попередній опис профілю, щоб не засмічувати чат
     if chat_id in last_profile_msg:
         try:
             bot.delete_message(chat_id, last_profile_msg[chat_id])
@@ -92,7 +101,6 @@ def send_profile_info(chat_id, text):
             pass
     
     try:
-        # Спроба відправити фото. Якщо файлу немає, відправиться лише текст.
         with open('tnvk15.jpg', 'rb') as photo:
             sent = bot.send_photo(chat_id, photo, caption=text, reply_markup=profiles_menu(), parse_mode='Markdown')
     except:
@@ -140,7 +148,16 @@ def p4(message):
     )
     send_profile_info(message.chat.id, text)
 
-if __name__ == '__main__':
-    print("Бот ТНВК №15 запущений...")
-    bot.infinity_polling()
+# Універсальний обробник для незрозумілих запитів
+@bot.message_handler(content_types=['text', 'audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice', 'location', 'contact'])
+def unknown_message(message):
+    text = (
+        "Вибачте, я не розумію цей запит. 🤖\n\n"
+        "Будь ласка, скористайтеся кнопками меню для навігації.\n"
+        "Якщо у вас виникли проблеми, введіть команду /help."
+    )
+    bot.send_message(message.chat.id, text, reply_markup=main_menu())
 
+if __name__ == '__main__':
+    print("Бот ТНВК №15 працює...")
+    bot.infinity_polling()
