@@ -91,6 +91,15 @@ def send_welcome(message):
     sent_msg = bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown')
     users_last_msg[message.chat.id] = sent_msg.message_id
 
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    text = (
+        "*Допомога*\n\n"
+        "Використовуйте кнопки внизу екрану для навігації.\n"
+        "Якщо кнопки зникли — введіть команду /start"
+    )
+    bot.send_message(message.chat.id, text, parse_mode='Markdown')
+
 @bot.message_handler(func=lambda message: message.text == "⬅️ ПОВЕРНУТИСЯ У МЕНЮ")
 def back_to_main(message):
     send_bot_message(
@@ -115,7 +124,8 @@ def show_contacts(message):
         "🔹 Оксана Романівна – директор;\n"
         "🔹 Краснопольська Ірина Семенівна – заступник директора з навчально-виховної роботи;\n"
         "🔹 Мацьковська Ганна Петрівна – заступник директора з навчально-виховної роботи;\n"
-        "🔹 Стульківська Мирослава Дмитрівна – заступник директора з виховної роботи."
+        "🔹 Стульківська Мирослава Дмитрівна – заступник директора з виховної роботи.\n\n"
+        "📧 *E-mail:* skhool_15@ukr.net"
     )
     send_bot_message(message, text, markup=main_menu())
 
@@ -124,7 +134,7 @@ def show_location(message):
     # 1. Видаляємо старі повідомлення
     delete_messages(message.chat.id, message.message_id)
     
-    # 2. Дані локації (Лесі Українки, 23 + Координати)
+    # 2. Дані локації
     lat = 49.54448018231034
     lon = 25.62807305074633
     
@@ -142,15 +152,9 @@ def show_location(message):
         "Натисніть кнопку нижче, щоб автоматично прокласти маршрут від вашого поточного місця знаходження до школи."
     )
     
-    # 4. Відправляємо повідомлення з кнопкою-посиланням
-    # Ми не запам'ятовуємо ID цього повідомлення в users_last_msg, щоб воно залишалося на екрані,
-    # поки користувач не натисне щось інше.
-    bot.send_message(message.chat.id, text, reply_markup=inline_markup, parse_mode='Markdown')
-
-    # 5. ВАЖЛИВО: Відразу відправляємо меню, щоб кнопки знизу не зникали
-    # Це повідомлення ми запам'ятовуємо, щоб потім його видалити
-    sent_menu = bot.send_message(message.chat.id, "⬇️ _Меню навігації_", reply_markup=main_menu(), parse_mode='Markdown')
-    users_last_msg[message.chat.id] = sent_menu.message_id
+    # 4. Відправляємо лише одне повідомлення з Inline-кнопкою
+    sent_msg = bot.send_message(message.chat.id, text, reply_markup=inline_markup, parse_mode='Markdown')
+    users_last_msg[message.chat.id] = sent_msg.message_id
 
 
 # --- ОБРОБНИКИ ПРОФІЛІВ ---
@@ -212,13 +216,14 @@ def profile_medical(message):
     )
     send_bot_message(message, text, markup=profiles_menu(), photo_path='tnvk15.jpg')
 
-# Обробник невідомого контенту
-@bot.message_handler(content_types=['text', 'photo', 'video', 'sticker', 'voice'])
+# Обробник будь-якого іншого контенту
+@bot.message_handler(content_types=['text', 'photo', 'video', 'sticker', 'video_note', 'voice', 'location', 'contact'])
 def unknown_content(message):
-    try:
-        bot.delete_message(message.chat.id, message.message_id)
-    except:
-        pass
+    bot.reply_to(
+        message, 
+        "Вибачте, я не розумію цей запит. Будь ласка, скористайтеся кнопками меню.\n"
+        "Якщо виникли проблеми, напишіть /help"
+    )
 
 if __name__ == '__main__':
     print("Бот запущено...")
