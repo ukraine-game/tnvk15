@@ -4,7 +4,7 @@ from telebot import types
 API_TOKEN = '8196800585:AAE3UBIw9m37YRJnWBm220DNYs7KnPGa7Ro'
 bot = telebot.TeleBot(API_TOKEN)
 
-# Словник для збереження ID останнього повідомлення профілів
+# Словник для збереження ID останнього повідомлення профілів (для видалення попередніх)
 last_profile_msg = {}
 
 def main_menu():
@@ -12,6 +12,7 @@ def main_menu():
     markup.add(
         types.KeyboardButton("🎓 ПРОФІЛІ НАВЧАННЯ"),
         types.KeyboardButton("📞 КОНТАКТИ"),
+        types.KeyboardButton("🌐 СОЦ.МЕРЕЖІ"),
         types.KeyboardButton("📍 ЛОКАЦІЯ")
     )
     return markup
@@ -76,22 +77,35 @@ def contacts(message):
     )
     bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown')
 
+@bot.message_handler(func=lambda m: m.text == "🌐 СОЦ.МЕРЕЖІ")
+def social_media(message):
+    text = (
+        "*НАШІ СОЦІАЛЬНІ МЕРЕЖІ*\n\n"
+        "📸 **Instagram:** [Перейти до профілю](https://www.instagram.com/15school.tern?igsh=cnZsazVnNzZ0cjZv)\n"
+        "🎵 **TikTok:** [Дивитись відео](https://www.tiktok.com/@15school.tern?_r=1&_t=ZS-93oansV58F8)\n"
+        "👥 **Facebook:** [Приєднатися до групи](https://www.facebook.com/groups/358047888038669/?ref=share)\n\n"
+        "📢 **Telegram:** НЕЗАБАРОМ! ⏳"
+    )
+    bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown', disable_web_page_preview=True)
+
 @bot.message_handler(func=lambda m: m.text == "📍 ЛОКАЦІЯ")
 def location(message):
+    # Координати школи
     lat, lon = 49.544480, 25.628073
-    # Спеціальне посилання для Google Maps для побудови маршруту від поточної позиції до цілі
+    # Пряме посилання на побудову маршруту (Google Maps Directions)
     route_url = f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
     
     inline_map = types.InlineKeyboardMarkup()
     inline_map.add(types.InlineKeyboardButton("🗺 Побудувати маршрут (Google Maps)", url=route_url))
     
     text = (
-        "*ТНВК Школа-ліцей №15*\n\n"
+        "*ТНВК Школа-ліцей №15 імені Лесі Українки*\n\n"
         "📍 **Адреса:** м. Тернопіль, вул. Лесі Українки, 23\n\n"
         "ℹ️ _Щоб побудувати маршрут на мапах від вашого поточного місцезнаходження, натисніть на кнопку нижче._\n\n"
         "Ви можете повернутися до меню кнопками нижче 👇"
     )
     bot.send_message(message.chat.id, text, reply_markup=inline_map, parse_mode='Markdown')
+    bot.send_message(message.chat.id, "Кнопки меню:", reply_markup=main_menu())
 
 def send_profile_info(chat_id, text):
     if chat_id in last_profile_msg:
@@ -148,16 +162,16 @@ def p4(message):
     )
     send_profile_info(message.chat.id, text)
 
-# Універсальний обробник для незрозумілих запитів
+# Обробник невідомих повідомлень
 @bot.message_handler(content_types=['text', 'audio', 'document', 'photo', 'sticker', 'video', 'video_note', 'voice', 'location', 'contact'])
 def unknown_message(message):
     text = (
         "Вибачте, я не розумію цей запит. 🤖\n\n"
         "Будь ласка, скористайтеся кнопками меню для навігації.\n"
-        "Якщо у вас виникли проблеми, введіть команду /help."
+        "Якщо у вас виникли проблеми або кнопки зникли, введіть команду /help."
     )
     bot.send_message(message.chat.id, text, reply_markup=main_menu())
 
 if __name__ == '__main__':
-    print("Бот ТНВК №15 працює...")
+    print("Бот ТНВК №15 успішно запущений...")
     bot.infinity_polling()
