@@ -47,7 +47,6 @@ def delete_messages(chat_id, user_msg_id):
 def send_bot_message(message, text, markup=None, photo_path=None):
     """Універсальна функція відправки"""
     delete_messages(message.chat.id, message.message_id)
-
     chat_id = message.chat.id
     sent_msg = None
 
@@ -62,20 +61,18 @@ def send_bot_message(message, text, markup=None, photo_path=None):
                     parse_mode='Markdown'
                 )
         else:
-            # disable_web_page_preview=True щоб не було прев'ю карти, тільки текст і кнопки
             sent_msg = bot.send_message(
                 chat_id, 
                 text, 
                 reply_markup=markup, 
                 parse_mode='Markdown',
-                disable_web_page_preview=True 
+                disable_web_page_preview=True
             )
         
         if sent_msg:
             users_last_msg[chat_id] = sent_msg.message_id
 
     except Exception as e:
-        # Якщо фото немає або помилка
         sent_msg = bot.send_message(chat_id, text, reply_markup=markup, parse_mode='Markdown')
         if sent_msg:
             users_last_msg[chat_id] = sent_msg.message_id
@@ -124,21 +121,36 @@ def show_contacts(message):
 
 @bot.message_handler(func=lambda message: message.text == "📍 ЛОКАЦІЯ")
 def show_location(message):
-    # Нові координати
+    # 1. Видаляємо старі повідомлення
+    delete_messages(message.chat.id, message.message_id)
+    
+    # 2. Дані локації (Лесі Українки, 23 + Координати)
     lat = 49.54448018231034
     lon = 25.62807305074633
     
-    # Формуємо посилання
-    google_maps_url = f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
+    # 3. Створюємо кнопку посилання (Inline)
+    inline_markup = types.InlineKeyboardMarkup()
+    url_btn = types.InlineKeyboardButton(
+        text="🗺 Побудувати маршрут (Google Maps)", 
+        url=f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
+    )
+    inline_markup.add(url_btn)
 
     text = (
         "*ТНВК Школа-ліцей №15 імені Лесі Українки*\n\n"
         "📍 *Адреса:* м. Тернопіль, вул. Лесі Українки, 23\n\n"
-        f"🗺 [Натисніть сюди, щоб прокласти маршрут в Google Maps]({google_maps_url})"
+        "Натисніть кнопку нижче, щоб автоматично прокласти маршрут від вашого поточного місця знаходження до школи."
     )
     
-    # Використовуємо main_menu(), щоб кнопки не зникали
-    send_bot_message(message, text, markup=main_menu())
+    # 4. Відправляємо повідомлення з кнопкою-посиланням
+    # Ми не запам'ятовуємо ID цього повідомлення в users_last_msg, щоб воно залишалося на екрані,
+    # поки користувач не натисне щось інше.
+    bot.send_message(message.chat.id, text, reply_markup=inline_markup, parse_mode='Markdown')
+
+    # 5. ВАЖЛИВО: Відразу відправляємо меню, щоб кнопки знизу не зникали
+    # Це повідомлення ми запам'ятовуємо, щоб потім його видалити
+    sent_menu = bot.send_message(message.chat.id, "⬇️ _Меню навігації_", reply_markup=main_menu(), parse_mode='Markdown')
+    users_last_msg[message.chat.id] = sent_menu.message_id
 
 
 # --- ОБРОБНИКИ ПРОФІЛІВ ---
