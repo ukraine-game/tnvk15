@@ -3,134 +3,128 @@ from telebot import types
 
 # Твій токен
 API_TOKEN = '8196800585:AAE3UBIw9m37YRJnWBm220DNYs7KnPGa7Ro'
-
 bot = telebot.TeleBot(API_TOKEN)
 
-# Словник для збереження ID останнього повідомлення бота
+# Словник для збереження ID повідомлень
 users_last_msg = {}
 
 # --- КЛАВІАТУРИ ---
 
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
-    btn1 = types.KeyboardButton("🎓 ПРОФІЛІ НАВЧАННЯ")
-    btn2 = types.KeyboardButton("📞 КОНТАКТИ")
-    btn3 = types.KeyboardButton("📍 ЛОКАЦІЯ")
-    markup.add(btn1, btn2, btn3)
+    markup.add(
+        types.KeyboardButton("🎓 ПРОФІЛІ НАВЧАННЯ"),
+        types.KeyboardButton("📞 КОНТАКТИ"),
+        types.KeyboardButton("📍 ЛОКАЦІЯ")
+    )
     return markup
 
 def profiles_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
-    btn1 = types.KeyboardButton("ІСТОРИКО-ПРАВОВИЙ ПРОФІЛЬ")
-    btn2 = types.KeyboardButton("ПРОФІЛЬ ІНОЗЕМНОЇ ФІЛОЛОГІЇ")
-    btn3 = types.KeyboardButton("БІОТЕХНОЛОГІЧНИЙ ПРОФІЛЬ")
-    btn4 = types.KeyboardButton("МЕДИЧНИЙ ПРОФІЛЬ")
-    btn_back = types.KeyboardButton("⬅️ ПОВЕРНУТИСЯ У МЕНЮ")
-    markup.add(btn1, btn2, btn3, btn4, btn_back)
+    markup.add(
+        types.KeyboardButton("ІСТОРИКО-ПРАВОВИЙ ПРОФІЛЬ"),
+        types.KeyboardButton("ПРОФІЛЬ ІНОЗЕМНОЇ ФІЛОЛОГІЇ"),
+        types.KeyboardButton("БІОТЕХНОЛОГІЧНИЙ ПРОФІЛЬ"),
+        types.KeyboardButton("МЕДИЧНИЙ ПРОФІЛЬ"),
+        types.KeyboardButton("⬅️ ПОВЕРНУТИСЯ У МЕНЮ")
+    )
     return markup
 
-# --- ДОПОМІЖНІ ФУНКЦІЇ ---
+# --- СЕРВІСНА ФУНКЦІЯ ВИДАЛЕННЯ ---
 
-def delete_messages(chat_id, user_msg_id):
-    """Видаляє повідомлення користувача та попереднє повідомлення бота"""
+def clear_and_send(chat_id, user_msg_id, text, markup, photo=None):
+    """Видаляє старе і гарантовано надсилає нове з кнопками"""
+    # 1. Видаляємо повідомлення користувача (те, що він натиснув)
     try:
         bot.delete_message(chat_id, user_msg_id)
     except:
         pass
+    
+    # 2. Видаляємо останнє повідомлення бота
     if chat_id in users_last_msg:
         try:
             bot.delete_message(chat_id, users_last_msg[chat_id])
         except:
             pass
 
-def send_profile_info(message, text):
-    """Універсальна функція для виведення інформації про профіль з фото та кнопками"""
-    delete_messages(message.chat.id, message.message_id)
+    # 3. Надсилаємо новий контент
     try:
-        with open('tnvk15.jpg', 'rb') as photo:
-            sent_msg = bot.send_photo(
-                message.chat.id, 
-                photo, 
-                caption=text, 
-                reply_markup=profiles_menu(), 
-                parse_mode='Markdown'
-            )
-    except Exception:
-        # Якщо фото не знайдено, надсилаємо просто текст, щоб бот не «впав»
-        sent_msg = bot.send_message(
-            message.chat.id, 
-            text, 
-            reply_markup=profiles_menu(), 
-            parse_mode='Markdown'
-        )
-    users_last_msg[message.chat.id] = sent_msg.message_id
+        if photo:
+            with open(photo, 'rb') as f:
+                sent = bot.send_photo(chat_id, f, caption=text, reply_markup=markup, parse_mode='Markdown')
+        else:
+            sent = bot.send_message(chat_id, text, reply_markup=markup, parse_mode='Markdown')
+        
+        users_last_msg[chat_id] = sent.message_id
+    except Exception as e:
+        print(f"Помилка відправки: {e}")
 
-# --- ОБРОБНИКИ ГОЛОВНОГО МЕНЮ ---
+# --- ОБРОБНИКИ КОМАНД ---
 
 @bot.message_handler(commands=['start'])
-def send_welcome(message):
-    delete_messages(message.chat.id, message.message_id)
-    text = (
-        "*Вітаю у боті ТНВК №15!*\n\n"
-        "Тут ви можете дізнатися про напрямки навчання, "
-        "знайти контакти адміністрації та побудувати маршрут."
+def start(message):
+    clear_and_send(
+        message.chat.id, 
+        message.message_id, 
+        "*Вітаю у боті ТНВК №15!*\n\nВикористовуйте кнопки нижче для навігації.", 
+        main_menu()
     )
-    sent_msg = bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown')
-    users_last_msg[message.chat.id] = sent_msg.message_id
 
-@bot.message_handler(func=lambda message: message.text == "⬅️ ПОВЕРНУТИСЯ У МЕНЮ")
-def back_to_main(message):
-    delete_messages(message.chat.id, message.message_id)
-    sent_msg = bot.send_message(message.chat.id, "*Головне меню*", reply_markup=main_menu(), parse_mode='Markdown')
-    users_last_msg[message.chat.id] = sent_msg.message_id
+@bot.message_handler(commands=['help'])
+def help_cmd(message):
+    bot.send_message(message.chat.id, "Якщо кнопки зникли, натисніть /start", reply_markup=main_menu())
 
-@bot.message_handler(func=lambda message: message.text == "🎓 ПРОФІЛІ НАВЧАННЯ")
-def show_profiles_menu(message):
-    delete_messages(message.chat.id, message.message_id)
-    sent_msg = bot.send_message(message.chat.id, "Оберіть профіль, який вас цікавить:", reply_markup=profiles_menu())
-    users_last_msg[message.chat.id] = sent_msg.message_id
+# --- ГОЛОВНЕ МЕНЮ ---
 
-@bot.message_handler(func=lambda message: message.text == "📞 КОНТАКТИ")
-def show_contacts(message):
-    delete_messages(message.chat.id, message.message_id)
+@bot.message_handler(func=lambda m: m.text == "🎓 ПРОФІЛІ НАВЧАННЯ")
+def profiles(message):
+    clear_and_send(message.chat.id, message.message_id, "Оберіть профіль навчання:", profiles_menu())
+
+@bot.message_handler(func=lambda m: m.text == "📞 КОНТАКТИ")
+def contacts(message):
     text = (
         "*КОНТАКТИ АДМІНІСТРАЦІЇ ТНВК ШМЛ 15*\n\n"
-        "🔹 Оксана Романівна – директор;\n"
-        "🔹 Краснопольська Ірина Семенівна – заступник директора з НВР;\n"
-        "🔹 Мацьковська Ганна Петрівна – заступник директора з НВР;\n"
-        "🔹 Стульківська Мирослава Дмитрівна – заступник директора з ВР.\n\n"
-        "📧 *E-mail:* skhool_15@ukr.net"
+        "🔹 **Оксана Романівна** – директор;\n"
+        "🔹 **Краснопольська Ірина Семенівна** – заступник директора з НВР;\n"
+        "🔹 **Мацьковська Ганна Петрівна** – заступник директора з НВР;\n"
+        "🔹 **Стульківська Мирослава Дмитрівна** – заступник директора з ВР.\n\n"
+        "📧 **E-mail:** skhool_15@ukr.net"
     )
-    sent_msg = bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown')
-    users_last_msg[message.chat.id] = sent_msg.message_id
+    clear_and_send(message.chat.id, message.message_id, text, main_menu())
 
-@bot.message_handler(func=lambda message: message.text == "📍 ЛОКАЦІЯ")
-def show_location(message):
-    delete_messages(message.chat.id, message.message_id)
+@bot.message_handler(func=lambda m: m.text == "📍 ЛОКАЦІЯ")
+def location(message):
     lat, lon = 49.544480, 25.628073
+    inline_map = types.InlineKeyboardMarkup()
+    inline_map.add(types.InlineKeyboardButton("🗺 Побудувати маршрут (Google Maps)", url=f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"))
     
-    inline_markup = types.InlineKeyboardMarkup()
-    url_btn = types.InlineKeyboardButton(
-        text="🗺 Побудувати маршрут (Google Maps)", 
-        url=f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
-    )
-    inline_markup.add(url_btn)
+    # Спершу чистимо екран
+    try:
+        bot.delete_message(message.chat.id, message.message_id)
+        if message.chat.id in users_last_msg:
+            bot.delete_message(message.chat.id, users_last_msg[message.chat.id])
+    except:
+        pass
 
     text = (
         "*ТНВК Школа-ліцей №15 імені Лесі Українки*\n\n"
-        "📍 *Адреса:* м. Тернопіль, вул. Лесі Українки, 23\n\n"
-        "Натисніть кнопку нижче, щоб прокласти маршрут."
+        "📍 **Адреса:** м. Тернопіль, вул. Лесі Українки, 23\n\n"
+        "Ви можете повернутися до меню кнопками нижче"
     )
-    sent_msg = bot.send_message(message.chat.id, text, reply_markup=inline_markup, parse_mode='Markdown')
     
-    # Оновлюємо нижнє меню (main_menu), щоб воно не зникало
-    bot.send_message(message.chat.id, "Ви можете повернутися до меню кнопками нижче:", reply_markup=main_menu())
-    users_last_msg[message.chat.id] = sent_msg.message_id
+    # Надсилаємо локацію з Inline кнопкою + головним меню
+    sent = bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown')
+    bot.edit_message_reply_markup(message.chat.id, sent.message_id, reply_markup=inline_map)
+    users_last_msg[message.chat.id] = sent.message_id
 
-# --- ОБРОБНИКИ ПРОФІЛІВ ---
+@bot.message_handler(func=lambda m: m.text == "⬅️ ПОВЕРНУТИСЯ У МЕНЮ")
+def go_back(message):
+    clear_and_send(message.chat.id, message.message_id, "*Головне меню*", main_menu())
 
-@bot.message_handler(func=lambda message: message.text == "ІСТОРИКО-ПРАВОВИЙ ПРОФІЛЬ")
-def profile_history(message):
+# --- ПРОФІЛІ (ТЕКСТИ) ---
+
+@bot.message_handler(func=lambda m: m.text == "ІСТОРИКО-ПРАВОВИЙ ПРОФІЛЬ")
+def p1(message):
     text = (
         "*ІСТОРИКО-ПРАВОВИЙ ПРОФІЛЬ*\n\n"
         "*НАШ ВИПУСКНИК ЗНАТИМЕ*\n"
@@ -152,10 +146,10 @@ def profile_history(message):
         "— Прийняти свідоме рішення у виборі майбутньої професії.\n"
         "— Підготуватися до якісного складання НМТ (ЗНО)."
     )
-    send_profile_info(message, text)
+    clear_and_send(message.chat.id, message.message_id, text, profiles_menu(), photo='tnvk15.jpg')
 
-@bot.message_handler(func=lambda message: message.text == "ПРОФІЛЬ ІНОЗЕМНОЇ ФІЛОЛОГІЇ")
-def profile_philology(message):
+@bot.message_handler(func=lambda m: m.text == "ПРОФІЛЬ ІНОЗЕМНОЇ ФІЛОЛОГІЇ")
+def p2(message):
     text = (
         "*ПРОФІЛЬ ІНОЗЕМНОЇ ФІЛОЛОГІЇ*\n\n"
         "*НАШ ВИПУСКНИК ЗНАТИМЕ*\n"
@@ -174,10 +168,10 @@ def profile_philology(message):
         "— Подорожувати без мовного бар’єра.\n"
         "— Успішно скласти НМТ."
     )
-    send_profile_info(message, text)
+    clear_and_send(message.chat.id, message.message_id, text, profiles_menu(), photo='tnvk15.jpg')
 
-@bot.message_handler(func=lambda message: message.text == "БІОТЕХНОЛОГІЧНИЙ ПРОФІЛЬ")
-def profile_biotech(message):
+@bot.message_handler(func=lambda m: m.text == "БІОТЕХНОЛОГІЧНИЙ ПРОФІЛЬ")
+def p3(message):
     text = (
         "*БІОТЕХНОЛОГІЧНИЙ ПРОФІЛЬ*\n\n"
         "*НАШ ВИПУСКНИК ЗНАТИМЕ*\n"
@@ -194,10 +188,10 @@ def profile_biotech(message):
         "— Швидко опановувати нові технології (ШІ, IoT, AR/VR).\n"
         "— Упевнено складати НМТ з математики."
     )
-    send_profile_info(message, text)
+    clear_and_send(message.chat.id, message.message_id, text, profiles_menu(), photo='tnvk15.jpg')
 
-@bot.message_handler(func=lambda message: message.text == "МЕДИЧНИЙ ПРОФІЛЬ")
-def profile_medical(message):
+@bot.message_handler(func=lambda m: m.text == "МЕДИЧНИЙ ПРОФІЛЬ")
+def p4(message):
     text = (
         "*МЕДИЧНИЙ ПРОФІЛЬ*\n\n"
         "*НАШ ВИПУСКНИК ЗНАТИМЕ*\n"
@@ -212,18 +206,19 @@ def profile_medical(message):
         "— Надавати першу домедичну допомогу.\n"
         "— Підготуватися до якісного складання НМТ."
     )
-    send_profile_info(message, text)
+    clear_and_send(message.chat.id, message.message_id, text, profiles_menu(), photo='tnvk15.jpg')
 
-# --- ОБРОБНИК НЕВІДОМОГО КОНТЕНТУ ---
+# --- ЗАХИСТ ВІД ІНШОГО КОНТЕНТУ ---
 
 @bot.message_handler(content_types=['text', 'photo', 'video', 'sticker', 'video_note', 'voice', 'location', 'contact'])
-def unknown_content(message):
-    bot.reply_to(
-        message, 
+def unknown(message):
+    bot.send_message(
+        message.chat.id, 
         "Вибачте, я не розумію цей запит. Будь ласка, скористайтеся кнопками меню.\n"
-        "Якщо виникли проблеми, напишіть /help"
+        "Якщо кнопки зникли — напишіть /start",
+        reply_markup=main_menu()
     )
 
 if __name__ == '__main__':
-    print("Бот працює...")
+    print("Бот запущений і готовий до роботи!")
     bot.infinity_polling()
