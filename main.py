@@ -80,7 +80,7 @@ def contacts(message):
 @bot.message_handler(func=lambda m: m.text == "🌐 СОЦ.МЕРЕЖІ")
 def social_media(message):
     inline_social = types.InlineKeyboardMarkup(row_width=1)
-    btn_inst = types.InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/15school.tern?igsh=cnZsazVnNzZ0cjZv")
+    btn_inst = types.InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/med_lyceum_ternopil?igsh=MWxnNWtueHZhNm4zdA%3D%3D&utm_source=qr")
     btn_fb = types.InlineKeyboardButton("👥 Facebook", url="https://www.facebook.com/groups/358047888038669/?ref=share")
     btn_tg = types.InlineKeyboardButton("📢 Telegram", url="https://t.me/+fthjCzQ2kMhhODAy")
     inline_social.add(btn_tg, btn_inst, btn_fb)
@@ -227,3 +227,4 @@ def unknown_message(message):
 
 if __name__ == '__main__':
     bot.infinity_polling()
+
