@@ -69,23 +69,24 @@ def go_back(message):
 def contacts(message):
     text = (
         "*АДМІНІСТРАЦІЯ ТНВК ШМЛ 15*\n\n"
-        "👤 **Мазуренок Оксана Романівна** – *директор*. 📞 +380689214600\n"
-        "👤 **Мацьковська Ганна Петрівна** – заступник директора з навчально-виховної роботи\n"
-        "👤 **Стульківська Мирослава Дмитрівна** – заступник директора з виховної роботи\n\n"
+        "👤 **Оксана Романівна** – директор\n"
+        "👤 **Краснопольська Ірина Семенівна** – заступник директора з НВР\n"
+        "👤 **Мацьковська Ганна Петрівна** – заступник директора з НВР\n"
+        "👤 **Стульківська Мирослава Дмитрівна** – заступник директора з ВР\n\n"
         "📧 **Наша електронна пошта (E-mail):**\n`skhool_15@ukr.net`"
     )
     bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown')
 
 @bot.message_handler(func=lambda m: m.text == "🌐 СОЦ.МЕРЕЖІ")
 def social_media(message):
-    text = (
-        "*НАШІ СОЦІАЛЬНІ МЕРЕЖІ*\n\n"
-        "📸 **Instagram:** [Перейти до профілю](https://www.instagram.com/15school.tern?igsh=cnZsazVnNzZ0cjZv)\n"
-        "🎵 **TikTok:** [Дивитись відео](https://www.tiktok.com/@15school.tern?_r=1&_t=ZS-93oansV58F8)\n"
-        "👥 **Facebook:** [Приєднатися до групи](https://www.facebook.com/groups/358047888038669/?ref=share)\n\n"
-        "📢 **Telegram:** НЕЗАБАРОМ! ⏳"
-    )
-    bot.send_message(message.chat.id, text, reply_markup=main_menu(), parse_mode='Markdown', disable_web_page_preview=True)
+    inline_social = types.InlineKeyboardMarkup(row_width=1)
+    btn_inst = types.InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/15school.tern?igsh=cnZsazVnNzZ0cjZv")
+    btn_fb = types.InlineKeyboardButton("👥 Facebook", url="https://www.facebook.com/groups/358047888038669/?ref=share")
+    btn_tg = types.InlineKeyboardButton("📢 Telegram", url="https://t.me/+fthjCzQ2kMhhODAy")
+    inline_social.add(btn_tg, btn_inst, btn_fb)
+
+    text = "*НАШІ СОЦІАЛЬНІ МЕРЕЖІ*\n\nНатисніть на кнопку нижче, щоб перейти до нашої сторінки:"
+    bot.send_message(message.chat.id, text, reply_markup=inline_social, parse_mode='Markdown')
 
 @bot.message_handler(func=lambda m: m.text == "📍 ЛОКАЦІЯ")
 def location(message):
@@ -96,7 +97,7 @@ def location(message):
     inline_map.add(types.InlineKeyboardButton("🗺 Побудувати маршрут (Google Maps)", url=route_url))
     
     text = (
-        "*ТНВК Школа-ліцей №15*\n\n"
+        "*ТНВК Школа-ліцей №15 імені Лесі Українки*\n\n"
         "📍 **Адреса:** м. Тернопіль, вул. Лесі Українки, 23\n\n"
         "ℹ️ _Щоб побудувати маршрут на мапах від вашого поточного місцезнаходження, натисніть на кнопку нижче._"
     )
@@ -225,10 +226,4 @@ def unknown_message(message):
     bot.send_message(message.chat.id, text, reply_markup=main_menu())
 
 if __name__ == '__main__':
-    print("Бот ТНВК №15 успішно працює...")
     bot.infinity_polling()
-
-
-
-
-
