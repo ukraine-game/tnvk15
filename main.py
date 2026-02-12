@@ -81,7 +81,7 @@ def contacts(message):
 def social_media(message):
     inline_social = types.InlineKeyboardMarkup(row_width=1)
     # Використовуємо максимально чисте посилання, яке коректно відкривається і в додатку, і в браузері
-    btn_inst = types.InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/med_lyceum_ternopil/")
+    btn_inst = types.InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/med_lyceum_ternopil?igsh=MTZyamFtaDlhdXpvdQ%3D%3D")
     btn_fb = types.InlineKeyboardButton("👥 Facebook", url="https://www.facebook.com/groups/358047888038669/?ref=share")
     btn_tg = types.InlineKeyboardButton("📢 Telegram", url="https://t.me/+fthjCzQ2kMhhODAy")
     
@@ -229,4 +229,5 @@ def unknown_message(message):
 
 if __name__ == '__main__':
     bot.infinity_polling()
+
 
