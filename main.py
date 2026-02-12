@@ -82,7 +82,7 @@ def social_media(message):
     
     # Використовуємо формат /_u/username, який примусово відкриває профіль у додатку
     btn_inst = types.InlineKeyboardButton("📸 Instagram", url="https://www.instagram.com/med_lyceum_ternopil/")
-    btn_fb = types.InlineKeyboardButton("👥 Facebook", url="https://www.instagram.com/med_lyceum_ternopil?igsh=MTZyamFtaDlhdXpvdQ==")
+    btn_fb = types.InlineKeyboardButton("👥 Facebook", url="https://www.facebook.com/groups/358047888038669/?ref=share")
     btn_tg = types.InlineKeyboardButton("📢 Telegram", url="https://t.me/+fthjCzQ2kMhhODAy")
     
     inline_social.add(btn_tg, btn_inst, btn_fb)
@@ -229,5 +229,6 @@ def unknown_message(message):
 
 if __name__ == '__main__':
     bot.infinity_polling()
+
 
 
